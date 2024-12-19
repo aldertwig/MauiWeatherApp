@@ -12,9 +12,9 @@
         <VerticalStackLayout
             Padding="30,0"
             Spacing="25">
-            <Button BackgroundColor="DimGrey" Text="For My Location" Command="{Binding UseMyLocationCommand}"></Button>
-            <Entry Placeholder="City..." Text="{Binding Location}"></Entry>
-            <Button BackgroundColor="OrangeRed" Text="For City Location" Command="{Binding GetGeoLocationCommand}"></Button>
+            <Button Margin="10" BackgroundColor="DimGrey" Text="For My Location" Command="{Binding UseMyLocationCommand}"></Button>
+            <Entry BackgroundColor="White" Placeholder="City..." Text="{Binding Location}"></Entry>
+            <Button Margin="10" BackgroundColor="OrangeRed" Text="For City Location" Command="{Binding GetGeoLocationCommand}"></Button>
             <Label FontSize="Large" HorizontalOptions="Center" Text="{Binding City}"/>
             <ActivityIndicator Color="DimGrey" IsRunning="True" IsVisible="{Binding IsFetching}"></ActivityIndicator>
             <CollectionView ItemsSource="{Binding Forecasts}" HeightRequest="800">
