@@ -1,39 +1,59 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:models="clr-namespace:WeatherApp.Models"
              x:Class="WeatherApp.MainPage"
+             xmlns:models="clr-namespace:WeatherApp.Models"
+             xmlns:viewmodels="clr-namespace:WeatherApp.ViewModels"
+             x:DataType="viewmodels:MainViewModel"
              Title="{Binding Title}">
 
 
-    <VerticalStackLayout
+    <Grid RowDefinitions="Auto,*" BackgroundColor="WhiteSmoke">
+        <VerticalStackLayout
             Padding="30,0"
             Spacing="25">
-        <Entry Placeholder="City..." Text="{Binding Location}"></Entry>
-        <HorizontalStackLayout Padding="20,0" Spacing="20">
-            <Button HorizontalOptions="Center" Text="Use Input Location" Command="{Binding GetForecast}"></Button>
-            <Button HorizontalOptions="Center" Text="Use My Location" Command="{Binding UseMyLocation}"></Button>
-        </HorizontalStackLayout>
-        <Grid RowDefinitions="Auto,*"
-              ColumnDefinitions="125,*"
-              Padding="30,0">
-            <CollectionView ItemsSource="{Binding Forecast}"
-                            Grid.Row="1"
-                            Grid.ColumnSpan="2">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="models:WeatherForecast">
+            <Button BackgroundColor="DimGrey" Text="For My Location" Command="{Binding UseMyLocationCommand}"></Button>
+            <Entry Placeholder="City..." Text="{Binding Location}"></Entry>
+            <Button BackgroundColor="OrangeRed" Text="For City Location" Command="{Binding GetGeoLocationCommand}"></Button>
+            <Label FontSize="Large" HorizontalOptions="Center" Text="{Binding City}"/>
+            <ActivityIndicator Color="DimGrey" IsRunning="True" IsVisible="{Binding IsFetching}"></ActivityIndicator>
+            <CollectionView ItemsSource="{Binding Forecasts}" HeightRequest="800">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Forecast">
+                        <Frame Padding="10" Margin="5">
                             <HorizontalStackLayout>
-                                <Image HeightRequest="100"
-                                       WidthRequest="100"
-                                       Aspect="AspectFill"></Image>
+                                <Image HeightRequest="75"
+                                        WidthRequest="75"
+                                        Source="{Binding IconURL}"
+                                        Aspect="AspectFill"></Image>
                                 <VerticalStackLayout>
-                                    <Label Text="{Binding WeatherMain}"/>
+                                    <HorizontalStackLayout>
+                                        <Label FontSize="Medium" Text="Temperature: "/>
+                                        <Label FontSize="Medium" Text="{Binding Temp}"/>
+                                        <Label FontSize="Medium" Text=" °C"/>
+                                    </HorizontalStackLayout>
+                                    <HorizontalStackLayout>
+                                        <Label FontSize="Small" Text="Weather: "/>
+                                        <Label FontSize="Small" Text="{Binding WeatherMain}"/>
+                                        <Label FontSize="Small" Text="  ("/>
+                                        <Label FontSize="Small" Text="{Binding Wind}"/>
+                                        <Label FontSize="Small" Text=" m/s)"/>
+                                    </HorizontalStackLayout>
+                                    <HorizontalStackLayout>
+                                        <Label FontSize="Small" Text="Time: "/>
+                                        <Label FontSize="Small" Text="{Binding Time}"/>
+                                    </HorizontalStackLayout>
+                                    <HorizontalStackLayout>
+                                        <Label Text="Date: "/>
+                                        <Label Text="{Binding Date}"/>
+                                    </HorizontalStackLayout>
                                 </VerticalStackLayout>
                             </HorizontalStackLayout>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-        </Grid>
-    </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </Grid>
 
 </ContentPage>

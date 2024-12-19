@@ -5,6 +5,6 @@ namespace WeatherApp.ViewModels
     public partial class BaseViewModel : ObservableObject
     {
         [ObservableProperty]
-        private string? title;
+        public string? title;
     }
 }

@@ -8,6 +8,8 @@ namespace WeatherApp
     {
         public static MauiApp CreateMauiApp()
         {
+            AppContext.SetSwitch("System.Reflection.NullabilityInfoContext.IsSupported", true);
+
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
@@ -19,7 +21,7 @@ namespace WeatherApp
     
             builder.Services.AddSingleton<MainPage>();
             builder.Services.AddSingleton<MainViewModel>();
-            builder.Services.AddTransient<WeatherForecastService>();
+            builder.Services.AddSingleton<WeatherForecastService>();
 #if DEBUG
             builder.Logging.AddDebug();
 #endif

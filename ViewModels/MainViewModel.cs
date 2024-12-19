@@ -6,46 +6,122 @@ using WeatherApp.Services;
 
 namespace WeatherApp.ViewModels
 {
-    public partial class MainViewModel : BaseViewModel
+    public partial class MainViewModel(WeatherForecastService forecastService) : BaseViewModel
     {
-        private readonly WeatherForecastService _weatherForecastService;
+        private readonly WeatherForecastService _weatherForecastService = forecastService;
         [ObservableProperty]
-        ObservableCollection<WeatherForecast> forecast = new ObservableCollection<WeatherForecast>();
-
+        private ObservableCollection<Forecast> _forecasts = new();
+        [ObservableProperty]
+        bool isFetching;
         [ObservableProperty]
         string? location;
-
-        public MainViewModel(WeatherForecastService forecastService)
-        {
-            _weatherForecastService = forecastService;
-        }
+        [ObservableProperty]
+        string? city;
 
         [RelayCommand]
         async void UseMyLocation()
         {
-            forecast.Clear();
-            var geoLocation = new GeoLocation() { Lat = 63.8256568, Lon = 20.2630745 };
-            //var forecastResponse = _weatherForecastService.GetForecast();
-            Title = "Umeå";
-            GetForecast(geoLocation);
+            try
+            {
+                Forecasts.Clear();
+                IsFetching = true;
+                var location = await GetCurrentLocation();
+                GetForecast(new GeoLocation() { Lat = location.Latitude, Lon = location.Longitude });
+            }
+            catch (Exception ex)
+            {
+                CancelRequest();
+                await Shell.Current.DisplayAlert("Alert", ex.Message, "Ok");
+                IsFetching = false;
+            }
         }
 
         [RelayCommand]
         async void GetGeoLocation()
         {
-            forecast.Clear();
-            //var forecastResponse = _weatherForecastService.Get();
+            if (Location is not null)
+            {
+                try
+                {
+                    Forecasts.Clear();
+                    IsFetching = true;
+                    var geoLocationResponse = await _weatherForecastService.GetGeoLocation(Location);
+                    if (geoLocationResponse.FirstOrDefault() != null)
+                    {
+                        GetForecast(geoLocationResponse.FirstOrDefault());
+                    }
+                    else
+                    {
+                        IsFetching = false;
+                        await Shell.Current.DisplayAlert("Info", $"Could not find location: {Location}", "Ok");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await Shell.Current.DisplayAlert("Alert", ex.Message, "Ok");
+                    IsFetching = false;
+                }
+            }
         }
 
         [RelayCommand]
         async void GetForecast(GeoLocation geoLocation)
         {
-            forecast.Clear();
+            Forecasts.Clear();
             var forecastResult = await _weatherForecastService.GetForecast(geoLocation.Lat, geoLocation.Lon);
+            City = forecastResult.City.Name;
+
             foreach (var forecastItem in forecastResult.List)
             {
-                forecast.Add(new WeatherForecast() { Temp = forecastItem.Main.Temp, Date = forecastItem.DtTxt, IconURL = "https://openweathermap.org/img/wn/" + forecastItem.Weather.First().Icon + "@2x.png", WeatherMain = forecastItem.Weather.First().Main });
+                var dateTime = forecastItem.DtTxt.Split(" ");
+                Forecasts.Add(new Forecast() { Temp = forecastItem.Main.Temp, Wind = forecastItem.Wind.Speed, Date = dateTime[0], Time = dateTime[1], IconURL = "https://openweathermap.org/img/wn/" + forecastItem.Weather.First().Icon + "@2x.png", WeatherMain = forecastItem.Weather.First().Main });
             }
+            IsFetching = false;
+        }
+
+        [ObservableProperty]
+        private CancellationTokenSource _cancelTokenSource;
+        [ObservableProperty]
+        private bool _isCheckingLocation;
+
+        [RelayCommand]
+        public async Task<Location> GetCurrentLocation()
+        {
+            Location location = null;
+            try
+            {
+                _isCheckingLocation = true;
+
+                GeolocationRequest request = new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(10));
+
+                _cancelTokenSource = new CancellationTokenSource();
+
+                location = await Geolocation.Default.GetLocationAsync(request, _cancelTokenSource.Token);
+
+                //if (location != null)
+                //    await Shell.Current.DisplayAlert("Alert", $"Latitude: {location.Latitude}, Longitude: {location.Longitude}, Altitude: {location.Altitude}", "Ok");
+                return location;
+            }
+            // Catch one of the following exceptions:
+            //   FeatureNotSupportedException
+            //   FeatureNotEnabledException
+            //   PermissionException
+            catch (Exception ex)
+            {
+                // Unable to get location
+                await Shell.Current.DisplayAlert("Alert", ex.Message, "Ok");
+            }
+            finally
+            {
+                _isCheckingLocation = false;
+            }
+            return location;
+        }
+
+        public void CancelRequest()
+        {
+            if (_isCheckingLocation && _cancelTokenSource != null && _cancelTokenSource.IsCancellationRequested == false)
+                _cancelTokenSource.Cancel();
         }
     }
 }

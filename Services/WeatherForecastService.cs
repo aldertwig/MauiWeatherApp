@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json;
 using WeatherApp.Models;
 
 namespace WeatherApp.Services
@@ -10,8 +11,8 @@ namespace WeatherApp.Services
     public class WeatherForecastService
     {
         HttpClient httpClient;
-        WeatherForecastResponse forecasts = new WeatherForecastResponse();
-        GeoLocation geoLocation;
+        WeatherForecastResponse forecasts = new();
+        List<GeoLocation> geoLocation = new();
         private readonly string _key = "7aeffc61bcc33289abfb963dc9b1ee7c";
         private readonly string countryCode = "se";
 
@@ -25,22 +26,27 @@ namespace WeatherApp.Services
             var response = await httpClient.GetAsync(url);
 
             if (response.IsSuccessStatusCode) {
-                    forecasts = await response.Content.ReadFromJsonAsync<WeatherForecastResponse>();
+                var jsonString = await response.Content.ReadAsStringAsync();
+                forecasts = JsonSerializer.Deserialize<WeatherForecastResponse>(jsonString);
             }
             return forecasts;
         }
 
-        public async Task <GeoLocation> GetGeoLocation(string city)
+        public async Task <List<GeoLocation>> GetGeoLocation(string? city)
         {
-            var url = $"http://api.openweathermap.org/geo/1.0/direct?q={city},{countryCode}&appid={_key}";
-            var response = await httpClient.GetAsync(url);
-
-            if (response.IsSuccessStatusCode)
+            if (city is not null)
             {
-                geoLocation = null;
-                geoLocation = await response.Content.ReadFromJsonAsync<GeoLocation>();
+                var url = $"https://api.openweathermap.org/geo/1.0/direct?q={city},{countryCode}&appid={_key}";
+                var response = await httpClient.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    geoLocation = null;
+                    geoLocation = await response.Content.ReadFromJsonAsync<List<GeoLocation>>();
+                }
+                return geoLocation;
             }
-            return geoLocation;
+            return null;
         }
     }
 }

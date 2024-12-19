@@ -8,6 +8,7 @@ namespace WeatherApp
         {
             InitializeComponent();
             BindingContext = mainViewModel;
+            mainViewModel.Title = "Weather Forecast";
         }
     }
 }
